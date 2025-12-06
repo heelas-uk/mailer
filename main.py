@@ -12,6 +12,9 @@ password = st.secrets['bloody_python']
 
 st.title("Fancy email sending system")
 st.write("Because **why** manually type out email addresses when you can spend 5 hours writing an app to use a .csv file?")
+behalf_of_name = st.text_input("Your name")
+behalf_of_email = st.text_input("Your email")
+
 mail_list = st.file_uploader("Upload email csv here", accept_multiple_files=False, type="csv")
 with st.form("email"):
     if mail_list is not None:
