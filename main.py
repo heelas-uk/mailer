@@ -20,9 +20,8 @@ st.write("Because **why** manually type out email addresses when you can spend 5
 if not st.user.is_logged_in:
     login_screen()
 else:
-    behalf_of_name = st.text_input("Your name", autocomplete=f"{st.user.name}")
-    behalf_of_email = st.text_input("Your email", autocomplete=f"{st.user.email}")
-    st.user
+    behalf_of_name = st.text_input("Your name", value=st.user.name)
+    behalf_of_email = st.text_input("Your email", value=st.user.email)
 
     mail_list = st.file_uploader("Upload email csv here", accept_multiple_files=False, type="csv")
     with st.form("email"):
