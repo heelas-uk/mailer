@@ -29,6 +29,7 @@ else:
             mail_data = mail_list.read().decode("utf-8")
             csv_reader = csv.DictReader(io.StringIO(mail_data))
             emails = [row['email'] for row in csv_reader if 'email' in row and row['email']]
+            names = [row['names'] for row in csv_reader if 'names' in row and row['names']]
             st.write("Emails to be sent to:")
             for i in emails:
                 st.code(i, language=None)
@@ -43,7 +44,7 @@ else:
 
                 # EMAIL TIME
                 try: 
-                    for i in emails:
+                    for i, n in zip(emails, names):
                         msg = MIMEMultipart()
                         msg['From'] = from_email
                         msg['To'] = i
@@ -56,6 +57,7 @@ else:
                         message = html_template.replace("[body]", body)
                         message = message.replace("[behalf_of_name]", behalf_of_name)
                         message = message.replace("[behalf_of_email]", behalf_of_email)
+                        message = message.replace("[name]", n)
 
                         msg.attach(MIMEText(message, "html"))
                         mailer= smtplib.SMTP(smtp_server, 587)
