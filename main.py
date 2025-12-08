@@ -66,4 +66,4 @@ else:
                     st.success("Email sent")
                 except Exception as e:
                     st.error(f"Mail failed: {e}")
-            st.button("Log out", on_click=st.logout)
+    st.button("Log out", on_click=st.logout)
