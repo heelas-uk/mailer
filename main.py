@@ -61,8 +61,6 @@ else:
 
                         msg.attach(MIMEText(message, "html"))
                         mailer= smtplib.SMTP(smtp_server, 587)
-                        mailer.ehlo()
-                        mailer.starttls()
                         mailer.login(user, password)
                         mailer.sendmail(from_email, i, msg.as_string() )
                     st.success("Email sent")
