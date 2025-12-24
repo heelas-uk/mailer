@@ -81,7 +81,7 @@ else:
 
                             resp = requests.post(
                                 "https://api.brevo.com/v3/smtp/email",
-                                headers=auth_headers
+                                headers=auth_headers,
                                 json=payload,
                                 timeout=10
                             )
