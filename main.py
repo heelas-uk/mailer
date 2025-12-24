@@ -93,4 +93,5 @@ else:
                     st.error(f"Failed to send email: {str(e)}")
                 except Exception as e:
                     st.error(f"An unexpected error occurred: {str(e)}")
-    st.logout()
+    if st.button("Log Out"):
+        st.logout()
