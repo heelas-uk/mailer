@@ -64,14 +64,20 @@ else:
                             message = message.replace("[behalf_of_email]", str(behalf_of_email))
                             message = message.replace("[name]", n)
 
-                            payload: Dict[str, str] = {
-                                "replyTo.email": "21heelasa@sta.cc",
-                                "replyTo.name": "Alfred Heelas",
-                                "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                "sender.email": "void@sta.hackclub.uk",
-                                "sender.name": f"STA Hak Club {behalf_of_name}",
-                                "to.email": i,
-                                "to.name": n,
+                            payload = {
+                                "replyTo": {
+                                    "email": "21heelasa@sta.cc",
+                                    "name": "Alfred Heelas"
+                                },
+                                "tags": ["hackclub", "hc", "Hack Club", st.user.email, behalf_of_name],
+                                "sender": {
+                                    "email": "void@sta.hackclub.uk",
+                                    "name": f"STA Hak Club {behalf_of_name}"
+                                },
+                                "to": [{
+                                    "email": i,
+                                    "name": n
+                                }],
                                 "subject": subject,
                                 "htmlContent": message,
                             }
