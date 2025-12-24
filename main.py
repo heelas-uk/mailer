@@ -49,40 +49,45 @@ else:
             body = st.text_area("Body text", help="You should not enter any custom names")
             submitted = st.form_submit_button("Send")
             if submitted == True:
-                with open("email.html", "r", encoding="utf-8") as f:
-                    html_template = f.read()
+                with st.spinner("Sending emails..."):
+                    with open("email.html", "r", encoding="utf-8") as f:
+                        html_template = f.read()
 
-                # EMAIL TIME
-                try: 
-                    for i, n in zip(emails, names):
-                        # Replace placeholders in HTML
-                        message = html_template.replace("[body]", body)
-                        message = message.replace("[behalf_of_name]", str(behalf_of_name))
-                        message = message.replace("[behalf_of_email]", str(behalf_of_email))
-                        message = message.replace("[name]", n)
+                    try:
+                        for i, n in zip(emails, names):
+                            message = html_template.replace("[body]", body)
+                            message = message.replace("[behalf_of_name]", str(behalf_of_name))
+                            message = message.replace("[behalf_of_email]", str(behalf_of_email))
+                            message = message.replace("[name]", n)
 
-                        payload: Dict[str, str] = {
-                            "api-key": st.secrets['brevo_api'],
-                            "replyTo.email": "21heelasa@sta.cc",
-                            "replyTo.name": "Alfred Heelas",
-                            "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                            "sender.email": "void@sta.hackclub.uk",
-                            "sender.name": f"STA Hak Club {behalf_of_name}",
-                            "to.email": i,
-                            "to.name": n,
-                            "subject": subject,
-                            "htmlContent": message,
-                        }
+                            payload: Dict[str, str] = {
+                                "api-key": st.secrets['brevo_api'],
+                                "replyTo.email": "21heelasa@sta.cc",
+                                "replyTo.name": "Alfred Heelas",
+                                "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
+                                "sender.email": "void@sta.hackclub.uk",
+                                "sender.name": f"STA Hak Club {behalf_of_name}",
+                                "to.email": i,
+                                "to.name": n,
+                                "subject": subject,
+                                "htmlContent": message,
+                            }
 
-                        if scheduled_at is not None:
-                            payload["scheduledAt"] = scheduled_at
+                            if scheduled_at is not None:
+                                payload["scheduledAt"] = scheduled_at
 
-                        print(str(payload))
-                        requests.post("https://api.brevo.com/v3/smtp/email", json=payload)
-                        st.success("Email sent")
-                except requests.exceptions.RequestException as e:
-                    st.error(f"Failed to send email: {str(e)}")
-                except Exception as e:
-                    st.error(f"An unexpected error occurred: {str(e)}")
+                            resp = requests.post(
+                                "https://api.brevo.com/v3/smtp/email",
+                                json=payload,
+                                timeout=10,
+                            )
+                            resp.raise_for_status()
+                            st.success(f"Email queued for {n} ({i})")
+                    except requests.exceptions.Timeout:
+                        st.error("Request timed out. Please try again.")
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"Failed to send email: {str(e)}")
+                    except Exception as e:
+                        st.error(f"An unexpected error occurred: {str(e)}")
     if st.button("Log Out"):
         st.logout()
