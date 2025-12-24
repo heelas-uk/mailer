@@ -1,14 +1,11 @@
 import streamlit as st
-import smtplib
 import csv
 import io
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import email.utils
-from datetime import datetime
+from typing import Dict, Optional
 from client_timezone import client_timezone
 from zoneinfo import ZoneInfo
 import requests
+
 timezone = client_timezone(key="client-timezone")
 
 def login_screen():
@@ -32,13 +29,17 @@ else:
     with st.form("email"):
         if mail_list is not None:
             mail_data = mail_list.read().decode("utf-8")
-            csv_reader = csv.DictReader(io.StringIO(mail_data))
-            emails = [row['email'] for row in csv_reader if 'email' in row and row['email']]
-            names = [row['names'] for row in csv_reader if 'names' in row and row['names']]
+            rows = list(csv.DictReader(io.StringIO(mail_data)))
+            emails = [row['email'] for row in rows if 'email' in row and row['email']]
+            names = [row['names'] for row in rows if 'names' in row and row['names']]
+
+            scheduled_at: Optional[str] = None
             scheduled = st.datetime_input(label="When would you like to schedule the email? To send ASAP leave blank", min_value="now", value=None, format="DD/MM/YYYY")
             if scheduled is not None:
                 local = scheduled.replace(tzinfo=timezone)
-                utc_shedule = local.astimezone(ZoneInfo("UTC"))
+                utc_schedule = local.astimezone(ZoneInfo("UTC"))
+                scheduled_at = utc_schedule.isoformat()
+
             st.write("Emails to be sent to:")
             for i in emails:
                 st.code(i, language=None)
@@ -59,35 +60,25 @@ else:
                         message = message.replace("[behalf_of_name]", str(behalf_of_name))
                         message = message.replace("[behalf_of_email]", str(behalf_of_email))
                         message = message.replace("[name]", n)
-                        if scheduled is not None:
-                            headers = {
-                                "api-key": st.secrets['brevo_api'],
-                                "replyTo.email": "21heelasa@sta.cc",
-                                "replyTo.name": "Alfred Heelas",
-                                "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                "sender.email": "void@sta.hackclub.uk",
-                                "sender.name": f"STA Hak Club {behalf_of_name}",
-                                "to.email": i,
-                                "to.name": n,
-                                "subject": subject,
-                                "scheduledAt": utc_shedule,
-                                "htmlContent": message
-                            }
-                        else:
-                            headers = {
-                                "api-key": st.secrets['brevo_api'],
-                                "replyTo.email": "21heelasa@sta.cc",
-                                "replyTo.name": "Alfred Heelas",
-                                "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                "sender.email": "void@sta.hackclub.uk",
-                                "sender.name": f"STA Hak Club {behalf_of_name}",
-                                "to.email": i,
-                                "to.name": n,
-                                "subject": subject,
-                                "htmlContent": message
-                            }
-                        print(headers)
-                        requests.post("https://api.brevo.com/v3/smtp/email", json=headers)
+
+                        payload: Dict[str, str] = {
+                            "api-key": st.secrets['brevo_api'],
+                            "replyTo.email": "21heelasa@sta.cc",
+                            "replyTo.name": "Alfred Heelas",
+                            "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
+                            "sender.email": "void@sta.hackclub.uk",
+                            "sender.name": f"STA Hak Club {behalf_of_name}",
+                            "to.email": i,
+                            "to.name": n,
+                            "subject": subject,
+                            "htmlContent": message,
+                        }
+
+                        if scheduled_at is not None:
+                            payload["scheduledAt"] = scheduled_at
+
+                        print(str(payload))
+                        requests.post("https://api.brevo.com/v3/smtp/email", json=payload)
                         st.success("Email sent")
                 except requests.exceptions.RequestException as e:
                     st.error(f"Failed to send email: {str(e)}")
