@@ -23,7 +23,8 @@ if not st.user.is_logged_in:
     login_screen()
 else:
     behalf_of_name = st.text_input("Your name", value=st.user.name)
-    behalf_of_email = st.code(st.user.email, language="markdown")
+    behalf_of_email = st.user.email
+    st.code(behalf_of_email, language="markdown")
 
     mail_list = st.file_uploader("Upload email csv here", accept_multiple_files=False, type="csv")
     with st.form("email"):
