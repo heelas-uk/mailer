@@ -52,7 +52,11 @@ else:
                 with st.spinner("Sending emails..."):
                     with open("email.html", "r", encoding="utf-8") as f:
                         html_template = f.read()
-
+                    auth_headers = {
+                        "accept": "application/json",
+                        "content-type": "application/json",
+                        "api-key": st.secrets["brevo_api"],
+                        }
                     try:
                         for i, n in zip(emails, names):
                             message = html_template.replace("[body]", body)
@@ -61,7 +65,6 @@ else:
                             message = message.replace("[name]", n)
 
                             payload: Dict[str, str] = {
-                                "api-key": st.secrets['brevo_api'],
                                 "replyTo.email": "21heelasa@sta.cc",
                                 "replyTo.name": "Alfred Heelas",
                                 "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
@@ -78,9 +81,11 @@ else:
 
                             resp = requests.post(
                                 "https://api.brevo.com/v3/smtp/email",
+                                headers=auth_headers
                                 json=payload,
-                                timeout=10,
+                                timeout=10
                             )
+                            
                             resp.raise_for_status()
                             st.success(f"Email queued for {n} ({i})")
                     except requests.exceptions.Timeout:
