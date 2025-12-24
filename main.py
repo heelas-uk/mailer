@@ -88,6 +88,7 @@ else:
                                 }
 
                     requests.post(https://api.brevo.com/v3/smtp/email, json=headers)
+                    print(headers)
                     st.success("Email sent")
                 except requests.exceptions.RequestException as e:
                     st.error(f"Failed to send email: {str(e)}")
