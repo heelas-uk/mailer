@@ -26,19 +26,24 @@ if not st.user.is_logged_in:
     login_screen()
 else:
     behalf_of_name = st.text_input("Your name", value=st.user.name)
-    behalf_of_email = st.code(st.user.email, language="markdown")
+    behalf_of_email = st.text_input("Your email", value=st.user.email)
 
     mail_list = st.file_uploader("Upload email csv here", accept_multiple_files=False, type="csv")
     with st.form("email"):
         if mail_list is not None:
             mail_data = mail_list.read().decode("utf-8")
-            csv_reader = csv.DictReader(io.StringIO(mail_data))
-            emails = [row['email'] for row in csv_reader if 'email' in row and row['email']]
-            names = [row['names'] for row in csv_reader if 'names' in row and row['names']]
-            scheduled = st.datetime_input(label="When would you like to schedule the email? To send ASAP leave blank", min_value="now", value=None, format="DD/MM/YYYY")
+            # Parse the CSV once, then derive emails and names from the same rows
+            rows = list(csv.DictReader(io.StringIO(mail_data)))
+            emails = [r.get('email') for r in rows if r.get('email')]
+            names = [(r.get('names') or r.get('name') or "").strip() for r in rows if (r.get('email'))]
+            scheduled = st.datetime_input(label="When would you like to schedule the email? To send ASAP leave blank", min_value=None, value=None, format="DD/MM/YYYY")
             if scheduled is not None:
-                local = scheduled.replace(tzinfo=timezone)
-                utc_shedule = local.astimezone(ZoneInfo("UTC"))
+                try:
+                    tz = ZoneInfo(timezone) if not isinstance(timezone, ZoneInfo) else timezone
+                except Exception:
+                    tz = ZoneInfo("UTC")
+                local = scheduled if scheduled.tzinfo else scheduled.replace(tzinfo=tz)
+                utc_schedule = local.astimezone(ZoneInfo("UTC")).isoformat()
             st.write("Emails to be sent to:")
             for i in emails:
                 st.code(i, language=None)
@@ -53,43 +58,40 @@ else:
 
                 # EMAIL TIME
                 try: 
-                    for i, n in zip(emails, names):
-                        # Replace placeholders in HTML
-                        message = html_template.replace("[body]", body)
-                        message = message.replace("[behalf_of_name]", str(behalf_of_name))
-                        message = message.replace("[behalf_of_email]", str(behalf_of_email))
-                        message = message.replace("[name]", n)
-                        if scheduled is not None:
-                            headers = {
-                                    "api-key": st.secrets['brevo_api'],
-                                    "replyTo.email": "21heelasa@sta.cc",
-                                    "replyTo.name": "Alfred Heelas",
-                                    "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                    "sender.email": "void@sta.hackclub.uk",
-                                    "sender.name": f"STA Hak Club {behalf_of_name}",
-                                    "to.email": i,
-                                    "to.name": n,
-                                    "subject": subject,
-                                    "scheduledAt": utc_shedule,
-                                    "htmlContent": message
-                                }
-                        else:
-                            headers = {
-                                    "api-key": st.secrets['brevo_api'],
-                                    "replyTo.email": "21heelasa@sta.cc",
-                                    "replyTo.name": "Alfred Heelas",
-                                    "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                    "sender.email": "void@sta.hackclub.uk",
-                                    "sender.name": f"STA Hak Club {behalf_of_name}",
-                                    "to.email": i,
-                                    "to.name": n,
-                                    "subject": subject,
-                                    "htmlContent": message
-                                }
+                    if not emails:
+                        st.warning("No recipients found in CSV.")
+                    else:
+                        # Constant HTTP headers for Brevo API
+                        http_headers = {
+                            "api-key": st.secrets['brevo_api'],
+                            "accept": "application/json",
+                            "content-type": "application/json"
+                        }
+                        sent = 0
+                        for i, n in zip(emails, names):
+                            # Replace placeholders in HTML
+                            message = html_template.replace("[body]", body)
+                            message = message.replace("[behalf_of_name]", str(behalf_of_name))
+                            message = message.replace("[behalf_of_email]", str(behalf_of_email))
+                            message = message.replace("[name]", n or "")
 
-                    requests.post("https://api.brevo.com/v3/smtp/email", json=headers)
-                    print(headers)
-                    st.success("Email sent")
+                            # Brevo API payload
+                            payload = {
+                                "replyTo": {"email": "21heelasa@sta.cc", "name": "Alfred Heelas"},
+                                "tags": ["hackclub", "hc", "Hack Club", str(behalf_of_email), str(behalf_of_name)],
+                                "sender": {"email": "void@sta.hackclub.uk", "name": f"STA Hack Club {behalf_of_name}"},
+                                "to": [{"email": i, "name": n}],
+                                "subject": subject,
+                                "htmlContent": message
+                            }
+                            if scheduled is not None:
+                                payload["scheduledAt"] = utc_schedule  # ISO-8601 UTC string
+
+                            resp = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=http_headers, timeout=15)
+                            resp.raise_for_status()
+                            sent += 1
+
+                        st.success(f"Email queued to {sent} recipient(s)")
                 except requests.exceptions.RequestException as e:
                     st.error(f"Failed to send email: {str(e)}")
                 except Exception as e:
