@@ -89,7 +89,7 @@ else:
 
                         requests.post("https://api.brevo.com/v3/smtp/email", json=headers)
                         st.success("Email sent")
-                    except requests.exceptions.RequestException as e:
-                        st.error(f"Failed to send email: {str(e)}")
-                    except Exception as e:
-                        st.error(f"An unexpected error occurred: {str(e)}")
+                        except requests.exceptions.RequestException as e:
+                            st.error(f"Failed to send email: {str(e)}")
+                        except Exception as e:
+                            st.error(f"An unexpected error occurred: {str(e)}")
