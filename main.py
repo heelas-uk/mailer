@@ -61,35 +61,36 @@ else:
                         message = message.replace("[name]", n)
                         if scheduled is not None:
                             headers = {
-                                    "api-key": st.secrets['brevo_api'],
-                                    "replyTo.email": "21heelasa@sta.cc",
-                                    "replyTo.name": "Alfred Heelas",
-                                    "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                    "sender.email": "void@sta.hackclub.uk",
-                                    "sender.name": f"STA Hak Club {behalf_of_name}",
-                                    "to.email": i,
-                                    "to.name": n,
-                                    "subject": subject,
-                                    "scheduledAt": utc_shedule,
-                                    "htmlContent": message
-                                }
+                                "api-key": st.secrets['brevo_api'],
+                                "replyTo.email": "21heelasa@sta.cc",
+                                "replyTo.name": "Alfred Heelas",
+                                "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
+                                "sender.email": "void@sta.hackclub.uk",
+                                "sender.name": f"STA Hak Club {behalf_of_name}",
+                                "to.email": i,
+                                "to.name": n,
+                                "subject": subject,
+                                "scheduledAt": utc_shedule,
+                                "htmlContent": message
+                            }
                         else:
                             headers = {
-                                    "api-key": st.secrets['brevo_api'],
-                                    "replyTo.email": "21heelasa@sta.cc",
-                                    "replyTo.name": "Alfred Heelas",
-                                    "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
-                                    "sender.email": "void@sta.hackclub.uk",
-                                    "sender.name": f"STA Hak Club {behalf_of_name}",
-                                    "to.email": i,
-                                    "to.name": n,
-                                    "subject": subject,
-                                    "htmlContent": message
-                                }
+                                "api-key": st.secrets['brevo_api'],
+                                "replyTo.email": "21heelasa@sta.cc",
+                                "replyTo.name": "Alfred Heelas",
+                                "tags": f"hackclub, hc, Hack Club, {behalf_of_email}, {behalf_of_name}",
+                                "sender.email": "void@sta.hackclub.uk",
+                                "sender.name": f"STA Hak Club {behalf_of_name}",
+                                "to.email": i,
+                                "to.name": n,
+                                "subject": subject,
+                                "htmlContent": message
+                            }
 
                         requests.post("https://api.brevo.com/v3/smtp/email", json=headers)
                         st.success("Email sent")
-                        except requests.exceptions.RequestException as e:
-                            st.error(f"Failed to send email: {str(e)}")
-                        except Exception as e:
-                            st.error(f"An unexpected error occurred: {str(e)}")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Failed to send email: {str(e)}")
+                except Exception as e:
+                    st.error(f"An unexpected error occurred: {str(e)}")
+    st.logout()
