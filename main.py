@@ -18,7 +18,7 @@ user = st.secrets['smtp_user']
 password = st.secrets['password']
 
 st.title("Fancy email sending system")
-st.write("Because **why** manually type out email addresses when you can spend 5 hours writing an app to use a .csv file?")
+st.write("Because **why** manually type out email addresses when you can spend 6.5 hours writing an app to use a .csv file?")
 if not st.user.is_logged_in:
     login_screen()
 else:
