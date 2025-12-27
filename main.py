@@ -47,7 +47,7 @@ else:
 
             st.write("## Compose your email")
             subject = st.text_input("Subject")
-            body = st.text_area("Body text", help="You should not enter any custom names")
+            body = st.text_area("Body text", help="[name] is the recipients name, [behalf_of_name] is your name from microsoft, [behalf_of_email] is our email from microsoft. DO NOT ADD A FOOTTER there is an automatic one.")
             submitted = st.form_submit_button("Send")
             if submitted == True:
                 with st.spinner("Sending emails..."):
